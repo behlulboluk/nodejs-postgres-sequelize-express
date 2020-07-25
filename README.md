@@ -41,7 +41,7 @@ Response - HTTP 200:
 
 ## 2. GET by id 
 
-- http://localhost:3000/users/${userId}
+- /users/:userId
 
 - http://localhost:3000/users/1
 
@@ -108,7 +108,7 @@ Response - HTTP 200:
 
 ## 4. POST - User borrowed a book with userId and bookId
 
-- http://localhost:3000/users/${userId}/borrow/${bookId}
+- /users/:userId/borrow/:bookId
 
 - http://localhost:3000/users/1/borrow/2
 
@@ -118,7 +118,7 @@ Response - HTTP 204 No Content
 
 ## 5. POST - User returning a book with his score
 
-- http://localhost:3000/users/${userId}/return/${bookId}
+- /users/:userId/return/:bookId
 
 - http://localhost:3000/users/1/return/2
 
@@ -166,7 +166,7 @@ Response - HTTP 200:
 
 ## 2. GET by id 
 
-- http://localhost:3000/books/${bookId}
+- /books/:bookId
 
 - http://localhost:3000/books/1
 
