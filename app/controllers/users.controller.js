@@ -1,9 +1,8 @@
 import { usersModel, booksModel } from '../models/model';
-import apiqueryparameters from 'api-query-params';
 import Util from '../util/util';
-import { v1 as uuidv1 } from 'uuid';
-import { validateCreate } from '../validations/UserTemplate';
-import { getAllBooks, getBook, postBook } from './books.controller';
+import { validateCreateUser } from '../validations/UserTemplate';
+import { validateCreateScore } from '../validations/returnBookTemplate';
+import { getBook } from './books.controller';
 
 const util = new Util();
 
@@ -20,56 +19,11 @@ export const getAllUsers = async (req, res) => {
     util.setError(500, 'Err', error);
     return util.send(res);
   }
-  // let query = apiqueryparameters(req.query);
-  // if (req.query.sortBy === "createdAt") {
-  //     query.sortBy = { createdAt: -1 }
-  // }
-  // console.log(req.query.sort)
-  // console.log(query.sort)
-  // console.log(query)
 };
 
 export const getUser = async (req, res, internal) => {
-  // console.log('req', req);
-  // console.log('res', res);
   const userId = req.params.userId;
   console.log('userId', typeof userId);
-  // console.log('userId', userId);
-  // if (!userId) {
-  //   util.setError(400, 'empty id');
-  //   return util.send(res);
-  // }
-
-  // try {
-  //   const user = await usersModel.findOne({
-  //     where: { id: userId },
-  //     attributes: ['id', 'name', 'past', 'present']
-  //   });
-  //   // console.log('user', user.dataValues);
-  //   console.log('internal', internal);
-  //   if (internal != true) {
-  //     if (!user) {
-  //       util.setError(404, `Cannot find user with the id ${userId}`);
-  //     } else {
-  //       let userPast = user.dataValues.past;
-  //       let userPresent = user.dataValues.present;
-  //       user.dataValues.books = {
-  //         past: userPast,
-  //         present: userPresent
-  //       };
-  //       delete user.dataValues.past;
-  //       delete user.dataValues.present;
-  //       // console.log(user);
-  //       util.setSuccess(200, 'Found User', user);
-  //     }
-  //     return util.send(res);
-  //   } else {
-  //     return user;
-  //   }
-  // } catch (error) {
-  //   util.setError(500, error);
-  //   return util.send(res);
-  // }
 
   let findOneParams = {
     where: { id: userId },
@@ -107,21 +61,18 @@ export const getUser = async (req, res, internal) => {
 export const postUser = async (req, res) => {
   try {
     let data = req.body;
-    // if (!data) {
-    //   return util.setError(400, 'empty request body');
-    // }
+
     console.log('before validation: ', data);
-    var valid = validateCreate(data);
+    var valid = validateCreateUser(data);
 
     if (!valid) {
-      var errorMessage = validateCreate.errors.map(err => JSON.stringify(err)).join(', ');
+      var errorMessage = validateCreateUser.errors.map(err => JSON.stringify(err)).join(', ');
       console.log('Error Message: ', errorMessage);
       util.setError(400, errorMessage);
       return util.send(res);
     }
     console.log('after Validation', data);
 
-    // data.id = uuidv1();
     data.past = [];
     data.present = [];
     console.log('after added id', data);
@@ -143,10 +94,13 @@ export const borrowBookFromUser = async (req, res) => {
   try {
     const { userId, bookId } = req.params;
     console.log('userId and bookId', userId, bookId);
+
     const getUserFunc = await getUser(req, res, true);
     console.log('getUserFunc', getUserFunc);
+
     const getBookFunc = await getBook(req, res, true);
     console.log('getBookFunc', getBookFunc);
+
     if (getUserFunc == null) {
       util.setError(404, 'does not exist user id');
       return util.send(res);
@@ -159,6 +113,7 @@ export const borrowBookFromUser = async (req, res) => {
       util.setError(400, 'you cannot borrow the book that because the book currently in someone else');
       return util.send(res);
     }
+
     if (getUserFunc != null && getBookFunc != null && getBookFunc.dataValues.current_borrow_user == null) {
       let updateUserPresent;
       if (getUserFunc._previousDataValues.present != []) {
@@ -190,7 +145,7 @@ export const borrowBookFromUser = async (req, res) => {
         },
         { where: { id: bookId } }
       );
-      util.setSuccess(200, 'borrow the book process is successful');
+      util.setSuccess(204, 'borrow the book process is successful');
       return util.send(res);
     }
   } catch (error) {
@@ -199,165 +154,117 @@ export const borrowBookFromUser = async (req, res) => {
     return util.send(res);
   }
 };
-// import GeoLocation from '../models/Location.model';
-// import mongoose from 'mongoose';
-// import apiqueryparameters from 'api-query-params';
 
-// mongoose.set('useFindAndModify', false);
+export const returnBookFromUserWithScore = async (req, res) => {
+  try {
+    const { userId, bookId } = req.params;
+    console.log('userId and bookId', userId, bookId);
 
-// // Retrieve and return all notes from the database.
-// export const getAllLocation = (req, res) => {
+    const getUserFunc = await getUser(req, res, true);
+    console.log('getUserFunc', getUserFunc);
 
-//     let query = apiqueryparameters(req.query);
+    const getBookFunc = await getBook(req, res, true);
+    console.log('getBookFunc', getBookFunc);
 
-//     if (req.query.sortBy === "createdAt") {
-//         query.sortBy = { createdAt: -1 }
-//     }
-//     console.log(req.query.sort)
-//     console.log(query.sort)
-//     console.log(query)
-//     let { filter, page, limit, sortBy, projection, population } = query;
-//     GeoLocation.find(filter)
-//         .skip(page)
-//         .limit(limit)
-//         .sort(sortBy)
-//         .select(projection)
-//         .exec((err, geoLocation) => {
-//             if (err) {
-//                 return res.status(500).send({
-//                     message: err.message || "Some error occurred while retrieving notes."
-//                 });
-//             }
-//             if (geoLocation.length === 0) {
-//                 return res.status(404).send({
-//                     message: "Note not found"
-//                 });
-//             }
-//             return res.status(200).send(geoLocation);
-//         });
-// };
+    if (getUserFunc == null) {
+      util.setError(404, 'does not exist user id');
+      return util.send(res);
+    }
+    if (getBookFunc == null) {
+      util.setError(404, 'does not exist book id');
+      return util.send(res);
+    }
+    if (
+      getUserFunc != null &&
+      getBookFunc != null &&
+      getBookFunc.dataValues.current_borrow_user != getUserFunc.dataValues.id
+    ) {
+      util.setError(400, 'this book is not yours');
+      return util.send(res);
+    }
 
-// // Create and Save a new Location
-// export const postLocation = (req, res) => {
-//     // Validate request
-//     if (!req.body.name) {
-//         return res.status(400).send({
-//             message: "Location name can not be empty"
-//         });
-//     }
-//     if (!req.body.year) {
-//         return res.status(400).send({
-//             message: "Location year can not be empty"
-//         });
-//     }
+    if (
+      getUserFunc != null &&
+      getBookFunc != null &&
+      getBookFunc.dataValues.current_borrow_user == getUserFunc.dataValues.id
+    ) {
+      let data = req.body;
+      console.log('before validation: ', data);
+      var valid = validateCreateScore(data);
+      if (!valid) {
+        var errorMessage = validateCreateScore.errors.map(err => JSON.stringify(err)).join(', ');
+        console.log('Error Message: ', errorMessage);
+        util.setError(400, errorMessage);
+        return util.send(res);
+      }
+      console.log('after Validation', data);
 
-//     // Create a Location
-//     let geoLocation = new GeoLocation({
-//         name: req.body.name,
-//         year: req.body.year,
-//         activate: req.body.activate,
-//         location: {
-//             lat: req.body.location.lat,
-//             long: req.body.location.long
-//         }
-//     });
+      if (data.score && data.score <= 10 && data.score > 0) {
+        let updateUserPast;
+        let updateUserPresent;
 
-//     // Save Location in the database
-//     geoLocation.save()
-//         .then(geoLocation => {
-//             return res.status(200).send({
-//                 message: "location added successfully",
-//                 geoLocation
-//             });
-//         }).catch(err => {
-//             return res.status(500).send({
-//                 message: err.message || "Some error occurred while creating the Location."
-//             });
-//         });
-// };
+        if (getUserFunc._previousDataValues.past != []) {
+          updateUserPast = getUserFunc._previousDataValues.past;
+          updateUserPast.push({
+            id: getBookFunc.dataValues.id,
+            name: getBookFunc.dataValues.name,
+            userScore: data.score
+          });
+          console.log('updateUserPast', updateUserPast);
+        } else {
+          updateUserPast = [{ id: getBookFunc.dataValues.id, name: getBookFunc.dataValues.name }];
+        }
 
-// // Find a single Location with a LocationId
-// export const getLocation = (req, res) => {
-//     GeoLocation.findById(req.params.locationId)
-//         .then(geoLocation => {
-//             if (!geoLocation) {
-//                 return res.status(404).send({
-//                     message: "Location not found with id " + req.params.locationId
-//                 });
-//             }
-//             return res.status(200).send(geoLocation);
-//         }).catch(err => {
-//             if (err.kind === 'ObjectId') {
-//                 return res.status(404).send({
-//                     message: "Location not found with id " + req.params.locationId
-//                 });
-//             }
-//             return res.status(500).send({
-//                 message: "Error retrieving Location with id " + req.params.locationId
-//             });
-//         });
-// };
+        updateUserPresent = getUserFunc._previousDataValues.present;
+        let updateUserPresentFindId = updateUserPresent.findIndex(item => item.id == getBookFunc.dataValues.id);
+        if (updateUserPresentFindId !== -1) {
+          updateUserPresent.splice(updateUserPresentFindId, 1);
+        }
 
-// // Update a Location identified by the LocationId in the request
-// export const updateLocation = (req, res) => {
-//     // Validate Request
-//     if (!req.body.name) {
-//         return res.status(400).send({
-//             message: "Location name can not be empty"
-//         });
-//     }
-//     if (!req.body.year) {
-//         return res.status(400).send({
-//             message: "Location year can not be empty"
-//         });
-//     }
+        console.log('updateUserPresent', updateUserPresent);
+        console.log('updateUserPast', updateUserPast);
 
-//     // Find Location and update it with the request body
-//     GeoLocation.findByIdAndUpdate(req.params.locationId, {
-//         name: req.body.name,
-//         year: req.body.year,
-//         activate: req.body.activate,
-//         location: {
-//             lat: req.body.location.lat,
-//             long: req.body.location.long
-//         }
-//     }, { new: true })
-//         .then(geoLocation => {
-//             if (!geoLocation) {
-//                 return res.status(404).send({
-//                     message: "Location not found with id " + req.params.locationId
-//                 });
-//             }
-//             return res.status(201).send(geoLocation);
-//         }).catch(err => {
-//             if (err.kind === 'ObjectId') {
-//                 return res.status(404).send({
-//                     message: "Location not found with id " + req.params.locationId
-//                 });
-//             }
-//             return res.status(500).send({
-//                 message: "Error updating Location with id " + req.params.locationId
-//             });
-//         });
-// };
+        await usersModel.update(
+          {
+            past: updateUserPast,
+            present: updateUserPresent
+          },
+          { where: { id: userId } }
+        );
 
-// // Delete a Location with the specified LocationId in the request
-// export const deleteLocation = (req, res) => {
-//     GeoLocation.findByIdAndRemove(req.params.locationId)
-//         .then(geoLocation => {
-//             if (!geoLocation) {
-//                 return res.status(404).send({
-//                     message: "Location not found with id " + req.params.locationId
-//                 });
-//             }
-//             return res.status(200).send({ message: "Location deleted successfully" });
-//         }).catch(err => {
-//             if (err.kind === 'ObjectId' || err.name === 'NotFound') {
-//                 return res.status(404).send({
-//                     message: "Location not found with id " + req.params.locationId
-//                 });
-//             }
-//             return res.status(500).send({
-//                 message: "Could not delete Location with id " + req.params.locationId
-//             });
-//         });
+        let new_score;
+        let total_score;
+        if (getBookFunc._previousDataValues.score != -1) {
+          new_score =
+            (getBookFunc._previousDataValues.total_score + data.score) / getBookFunc._previousDataValues.borrow_count;
+        } else {
+          new_score = data.score;
+        }
+
+        if (getBookFunc._previousDataValues.total_score != null) {
+          total_score = getBookFunc._previousDataValues.total_score + data.score;
+        } else {
+          total_score = data.score;
+        }
+
+        await booksModel.update(
+          {
+            current_borrow_user: null,
+            score: new_score,
+            total_score: total_score
+          },
+          { where: { id: bookId } }
+        );
+        util.setSuccess(204, 'return and score the book process is successful');
+        return util.send(res);
+      } else {
+        util.setError(400, 'you can input score between 0 to 10');
+        return util.send(res);
+      }
+    }
+  } catch (error) {
+    console.log('err', error);
+    util.setError(500, 'Err', error);
+    return util.send(res);
+  }
+};

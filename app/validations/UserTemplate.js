@@ -30,6 +30,6 @@ const createSchema = {
 var updateSchema = Object.create(createSchema);
 updateSchema.required = ['id'];
 
-export const validateCreate = ajv.compile(createSchema);
-export const validateUpdate = ajv.compile(updateSchema);
+export const validateCreateUser = ajv.compile(createSchema);
+export const validateUpdateUser = ajv.compile(updateSchema);
 export const required_fields = createSchema.required;

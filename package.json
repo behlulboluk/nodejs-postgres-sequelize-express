@@ -1,10 +1,9 @@
 {
-  "name": "locations-app",
+  "name": "nodejs-express-case",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --require @babel/register './test/Location.test.js'",
     "start": "nodemon --exec babel-node server.js && export NODE_ENV=DEV",
     "build": "webpack -p --mode production"
   },

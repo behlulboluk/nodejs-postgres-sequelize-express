@@ -35,31 +35,3 @@ export default class Util {
     });
   }
 }
-
-// export default setSuccess = (statusCode, message, data) => {
-//   this.statusCode = statusCode;
-//   this.message = message;
-//   this.data = data;
-//   this.type = 'success';
-// };
-
-// export default setError = (statusCode, message) => {
-//   this.statusCode = statusCode;
-//   this.message = message;
-//   this.type = 'error';
-// };
-// export default send = res => {
-//   const result = {
-//     status: this.type,
-//     message: this.message,
-//     data: this.data
-//   };
-
-//   if (this.type === 'success') {
-//     return res.status(this.statusCode).json(result);
-//   }
-//   return res.status(this.statusCode).json({
-//     status: this.type,
-//     message: this.message
-//   });
-// };
