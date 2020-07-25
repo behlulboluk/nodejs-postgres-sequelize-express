@@ -188,79 +188,83 @@ export const returnBookFromUserWithScore = async (req, res) => {
       getBookFunc != null &&
       getBookFunc.dataValues.current_borrow_user == getUserFunc.dataValues.id
     ) {
+      let updateUserPast;
+      let updateUserPresent;
+      let new_score = getBookFunc._previousDataValues.score;
+      let total_score = getBookFunc._previousDataValues.total_score;
+      let borrow_count_for_score = getBookFunc._previousDataValues.borrow_count_for_score;
+      let updateUserPastParams = {
+        id: getBookFunc.dataValues.id,
+        name: getBookFunc.dataValues.name
+      };
       let data = req.body;
-      console.log('before validation: ', data);
-      var valid = validateCreateScore(data);
-      if (!valid) {
-        var errorMessage = validateCreateScore.errors.map(err => JSON.stringify(err)).join(', ');
-        console.log('Error Message: ', errorMessage);
-        util.setError(400, errorMessage);
-        return util.send(res);
-      }
-      console.log('after Validation', data);
+      console.log('data', data);
 
-      if (data.score && data.score <= 10 && data.score > 0) {
-        let updateUserPast;
-        let updateUserPresent;
+      if (Object.keys(data).length != 0) {
+        console.log('before validation: ', data);
+        var valid = validateCreateScore(data);
+        if (!valid) {
+          var errorMessage = validateCreateScore.errors.map(err => JSON.stringify(err)).join(', ');
+          console.log('Error Message: ', errorMessage);
+          util.setError(400, errorMessage);
+          return util.send(res);
+        }
+        console.log('after Validation', data);
 
-        if (getUserFunc._previousDataValues.past != []) {
-          updateUserPast = getUserFunc._previousDataValues.past;
-          updateUserPast.push({
-            id: getBookFunc.dataValues.id,
-            name: getBookFunc.dataValues.name,
-            userScore: data.score
-          });
-          console.log('updateUserPast', updateUserPast);
+        if (data.score && data.score <= 10 && data.score > 0) {
+          updateUserPastParams.userScore = data.score;
+          borrow_count_for_score = borrow_count_for_score + 1;
+          if (getBookFunc._previousDataValues.score != -1) {
+            new_score = (getBookFunc._previousDataValues.total_score + data.score) / borrow_count_for_score;
+          } else {
+            new_score = data.score;
+          }
+
+          if (getBookFunc._previousDataValues.total_score != null) {
+            total_score = getBookFunc._previousDataValues.total_score + data.score;
+          } else {
+            total_score = data.score;
+          }
         } else {
-          updateUserPast = [{ id: getBookFunc.dataValues.id, name: getBookFunc.dataValues.name }];
+          util.setError(400, 'you can input score between 0 to 10');
+          return util.send(res);
         }
+      }
 
-        updateUserPresent = getUserFunc._previousDataValues.present;
-        let updateUserPresentFindId = updateUserPresent.findIndex(item => item.id == getBookFunc.dataValues.id);
-        if (updateUserPresentFindId !== -1) {
-          updateUserPresent.splice(updateUserPresentFindId, 1);
-        }
+      if (getUserFunc._previousDataValues.past != []) {
+        updateUserPast = getUserFunc._previousDataValues.past;
 
-        console.log('updateUserPresent', updateUserPresent);
+        updateUserPast.push(updateUserPastParams);
         console.log('updateUserPast', updateUserPast);
-
-        await usersModel.update(
-          {
-            past: updateUserPast,
-            present: updateUserPresent
-          },
-          { where: { id: userId } }
-        );
-
-        let new_score;
-        let total_score;
-        if (getBookFunc._previousDataValues.score != -1) {
-          new_score =
-            (getBookFunc._previousDataValues.total_score + data.score) / getBookFunc._previousDataValues.borrow_count;
-        } else {
-          new_score = data.score;
-        }
-
-        if (getBookFunc._previousDataValues.total_score != null) {
-          total_score = getBookFunc._previousDataValues.total_score + data.score;
-        } else {
-          total_score = data.score;
-        }
-
-        await booksModel.update(
-          {
-            current_borrow_user: null,
-            score: new_score,
-            total_score: total_score
-          },
-          { where: { id: bookId } }
-        );
-        util.setSuccess(204, 'return and score the book process is successful');
-        return util.send(res);
       } else {
-        util.setError(400, 'you can input score between 0 to 10');
-        return util.send(res);
+        updateUserPast = [updateUserPastParams];
       }
+      updateUserPresent = getUserFunc._previousDataValues.present;
+      let updateUserPresentFindId = updateUserPresent.findIndex(item => item.id == getBookFunc.dataValues.id);
+      if (updateUserPresentFindId !== -1) {
+        updateUserPresent.splice(updateUserPresentFindId, 1);
+      }
+      console.log('updateUserPresent', updateUserPresent);
+      console.log('updateUserPast', updateUserPast);
+      await usersModel.update(
+        {
+          past: updateUserPast,
+          present: updateUserPresent
+        },
+        { where: { id: userId } }
+      );
+
+      await booksModel.update(
+        {
+          current_borrow_user: null,
+          score: new_score,
+          total_score: total_score,
+          borrow_count_for_score: borrow_count_for_score
+        },
+        { where: { id: bookId } }
+      );
+      util.setSuccess(204, 'return and score the book process is successful');
+      return util.send(res);
     }
   } catch (error) {
     console.log('err', error);

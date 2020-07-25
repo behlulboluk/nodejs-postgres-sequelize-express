@@ -122,14 +122,13 @@ Response - HTTP 204 No Content
 
 - http://localhost:3000/users/1/return/2
 
-Body:
+Body:(Optional)
 
 ```
 {
     "score": 9
 }
 ```
-required_fields = ["score"]
 
 Response - HTTP 204 No content
 

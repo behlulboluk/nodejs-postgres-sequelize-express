@@ -15,7 +15,7 @@ export const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASS
 });
 
 export const usersModel = sequelize.define(
-  'users_8',
+  'users_behlul_case',
   {
     // Model attributes are defined here
     name: {
@@ -37,7 +37,7 @@ export const usersModel = sequelize.define(
 );
 
 export const booksModel = sequelize.define(
-  'books_8',
+  'books_behlul_case',
   {
     // Model attributes are defined here
     name: {
@@ -53,6 +53,10 @@ export const booksModel = sequelize.define(
       allowNull: true
     },
     borrow_count: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    borrow_count_for_score: {
       type: DataTypes.INTEGER,
       allowNull: true
     },
