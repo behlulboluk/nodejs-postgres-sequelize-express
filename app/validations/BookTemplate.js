@@ -5,17 +5,9 @@ const createSchema = {
   additionalProperties: false,
   definitions: {},
   properties: {
-    id: {
-      $id: '#/properties/id',
-      type: 'string'
-    },
     name: {
       $id: '#/properties/name',
       type: 'string'
-    },
-    score: {
-      $id: '#/properties/score',
-      type: 'number'
     }
   },
 
@@ -23,9 +15,5 @@ const createSchema = {
   type: 'object'
 };
 
-var updateSchema = Object.create(createSchema);
-updateSchema.required = ['id'];
-
 export const validateCreateBook = ajv.compile(createSchema);
-export const validateUpdateBook = ajv.compile(updateSchema);
 export const required_fields = createSchema.required;

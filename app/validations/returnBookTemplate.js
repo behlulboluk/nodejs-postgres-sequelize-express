@@ -15,9 +15,5 @@ const createSchema = {
   type: 'object'
 };
 
-var updateSchema = Object.create(createSchema);
-updateSchema.required = ['id'];
-
 export const validateCreateScore = ajv.compile(createSchema);
-export const validateUpdateScore = ajv.compile(updateSchema);
 export const required_fields = createSchema.required;

@@ -1,5 +1,8 @@
 # Nodejs Express Rest Api 
 ---
+
+>Config: connectString Postgresql in ./app/config/config.js
+
 ## Prerequisites
 - postgresql
 - nodejs
